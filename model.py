@@ -10,7 +10,6 @@ DECODE_DICT = {i:char for i, char in enumerate(CHARS)}
 NUM_CLASS = len(CHARS)+1
 
 def CTCLoss(y_true, y_pred):
-    # Compute the training-time loss value
     batch_len = tf.cast(tf.shape(y_true)[0], dtype="int64")
     input_length = tf.cast(tf.shape(y_pred)[1], dtype="int64")
     label_length = tf.cast(tf.shape(y_true)[1], dtype="int64")
@@ -29,13 +28,13 @@ class small_basic_block(keras.layers.Layer):
         out_div4=int(out_channels/4)
         self.main_layers = [
             keras.layers.Conv2D(out_div4,(1,1),padding='same',kernel_initializer=keras.initializers.glorot_uniform(),bias_initializer=keras.initializers.constant()),
-            
+            keras.layers.BatchNormalization(),
             keras.layers.ReLU(),
             keras.layers.Conv2D(out_div4,(3,1),padding='same',kernel_initializer=keras.initializers.glorot_uniform(),bias_initializer=keras.initializers.constant()),
-            
+            keras.layers.BatchNormalization(),
             keras.layers.ReLU(),
             keras.layers.Conv2D(out_div4,(1,3),padding='same',kernel_initializer=keras.initializers.glorot_uniform(),bias_initializer=keras.initializers.constant()),
-            
+            keras.layers.BatchNormalization(),
             keras.layers.ReLU(),
             keras.layers.Conv2D(out_channels,(1,1),padding='same',kernel_initializer=keras.initializers.glorot_uniform(),bias_initializer=keras.initializers.constant()),
             keras.layers.BatchNormalization(),
@@ -48,7 +47,6 @@ class small_basic_block(keras.layers.Layer):
             x = layer(x)
         return x
 
-#test this later
 class global_context(keras.layers.Layer):
     def __init__(self,kernel_size,stride,**kwargs):
         super().__init__(**kwargs)
@@ -89,6 +87,8 @@ class LPRnet(keras.Model):
         ]
         self.out_layers = [
             keras.layers.Conv2D(NUM_CLASS,kernel_size=(1,1),strides=(1,1),padding='same',name='conv_out',kernel_initializer=keras.initializers.glorot_uniform(),bias_initializer=keras.initializers.constant()),
+            #keras.layers.BatchNormalization(),
+            #keras.layers.ReLU(),
         ]
         self.out = self.call(self.input_layer)
         super(LPRnet, self).__init__(
@@ -102,13 +102,14 @@ class LPRnet(keras.Model):
         for layer in self.cnn_layers:
             x = layer(x)
             layer_outputs.append(x)
-        scale1 = global_context((1,4),(1,4))(layer_outputs[0]) # first conv
-        scale2 = global_context((1,4),(1,4))(layer_outputs[4]) # first small block
-        scale3 = global_context((1,2),(1,2))(layer_outputs[7]) # second small block
+        scale1 = global_context((1,4),(1,4))(layer_outputs[0])
+        scale2 = global_context((1,4),(1,4))(layer_outputs[4])
+        scale3 = global_context((1,2),(1,2))(layer_outputs[6])
+        scale5 = global_context((1,2),(1,2))(layer_outputs[7])
         sq = keras.layers.Lambda(lambda x: tf.math.square(x))(x)
         sqm = keras.layers.Lambda(lambda x: tf.math.reduce_mean(x))(sq)
         scale4 = keras.layers.Lambda(lambda x: tf.math.divide(x[0], x[1]))([x , sqm])
-        gc_concat = keras.layers.Lambda(lambda x: tf.concat([x[0], x[1], x[2], x[3]],3))([scale1, scale2, scale3, scale4])
+        gc_concat = keras.layers.Lambda(lambda x: tf.concat([x[0], x[1], x[2], x[3], x[4]],3))([scale1, scale2, scale3, scale5,scale4])
         for layer in self.out_layers:
             gc_concat = layer(gc_concat)
         logits = keras.layers.Lambda(lambda x: tf.math.reduce_mean(x[0],axis=1))([gc_concat])
