@@ -170,4 +170,6 @@ class ImageGenerator:
             images.append(cv2.resize(Plate,(94,24))/256)
             labels.append(code)
 
+        #load sample from train images
+
         return images, labels
