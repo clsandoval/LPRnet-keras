@@ -26,10 +26,12 @@ class ImageGenerator:
         self.ttf_dir = ttf_dir
         self.fonts, self.font_char_ims = self.load_fonts(ttf_dir)
 
+
+        green = [0,1,0]
         white = [1, 1, 1]
         yellow = [0, 1, 1]
         blue = [1, 0, 0]
-        self.black_text_colors = [white, yellow]
+        self.black_text_colors = [white, yellow,green]
         self.white_text_colors = [blue]
 
     def random_text_plate_colors(self, min_diff=0.3, black_text=True):
@@ -40,7 +42,7 @@ class ImageGenerator:
 
     def load_fonts(self, folder_path):
         font_char_ims = {}
-        fonts = [f for f in os.listdir(folder_path) if f.endswith('.TTF')]
+        fonts = [f for f in os.listdir(folder_path) if (f.endswith('.TTF') or f.endswith('.ttf')) ]
         for font in fonts:
             font_char_ims[font] = dict(self.generate_char_imgs(\
                 os.path.join(folder_path, font), self.char_height))
@@ -93,7 +95,7 @@ class ImageGenerator:
         char_img = char_ims[label]
         return char_img, label
 
-    def generate_images(self, number):
+    def generate_images(self, number, training = True):
 
         images = []
         labels = []
@@ -152,7 +154,7 @@ class ImageGenerator:
                 color = np.array(random.choice(self.black_text_colors))
             else:
                 color = np.array(random.choice(self.white_text_colors))
-
+            
             w_color = color * plate_color
 
             dim = (Plate_h, Plate_w, 3)
@@ -167,6 +169,7 @@ class ImageGenerator:
             Plate = Plate.astype(np.float32)
             Plate = data_augmentation(Plate)
 
+            #images.append(Plate)
             images.append(cv2.resize(Plate,(94,24))/256)
             labels.append(code)
 
