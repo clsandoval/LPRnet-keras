@@ -21,7 +21,7 @@ def motion_blur(img):
 def blur(img):
     rows,cols, _ = img.shape
 
-    dst = cv2.GaussianBlur(img,(5,5),cv2.BORDER_DEFAULT)
+    dst = cv2.GaussianBlur(img,(3,3),cv2.BORDER_DEFAULT)
     return dst
 
 def jitter(img, jitter=0.1):
@@ -46,7 +46,7 @@ def rotate(img, angle=np.random.randint(5,20)):
 def perspective(img):
 
     h, w, _ = img.shape
-    per = random.uniform(0.05, 0.1)
+    per = random.uniform(0.05, 0.3)
     w_p = int(w * per)
     h_p = int(h * per)
 

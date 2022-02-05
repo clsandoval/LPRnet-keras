@@ -17,10 +17,12 @@ class ImageGenerator:
         self.letters = []
         self.digits = []
         for c in char_set:
-            if str.isalpha(c):
-                self.letters.append(c)
-            else:
-                self.digits.append(c)
+            self.letters.append(c)
+            self.digits.append(c)
+            #if str.isalpha(c):
+            #    self.letters.append(c)
+            #else:
+            #    self.digits.append(c)
 
         self.char_height = char_height
         self.ttf_dir = ttf_dir
