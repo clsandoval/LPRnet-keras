@@ -2,7 +2,7 @@ import cv2
 import glob
 import numpy as np
 import tensorflow as tf
-import os
+import os, sys
 import tensorflow.keras as keras
 import keras.backend as K
 from generator import DataGenerator
@@ -23,7 +23,7 @@ TFLITE_PATH = 'tflite_models'
 real_images_val = glob.glob('C:\\Users\\carlos\\Desktop\\cs\\ml-sandbox\\ANPR\\LPRnet-keras\\valid\\*\\*.png')
 real_images = glob.glob('C:\\Users\\carlos\\Desktop\\cs\\ml-sandbox\\ANPR\\LPRnet-keras\\test\\marty\\*\\*.png')
 
-def main(MODEL_NAME = "depthwise_model_rabdomchars_perspective"):
+def main(epochs,MODEL_NAME = "depthwise_model_rabdomchars_perspective"):
     wandb.init(project=MODEL_NAME, entity="clsandoval")
     wandb.config = {
     "learning_rate": 0.001,
@@ -49,7 +49,7 @@ def main(MODEL_NAME = "depthwise_model_rabdomchars_perspective"):
     for file in real_images:
         label = file.split('\\')[-1].split('_')[0].split('-')[0]
         label = label.replace("O","0")
-        image = cv2.imread(file,cv2.IMREAD_COLOR)
+        image = cv2.imread(file).astype('float32')
         image = cv2.resize(image,(94,24))/256
         data.append(image)
         labels.append([CHARS_DICT[i] for i in label.split('_')[0]])
@@ -70,7 +70,8 @@ def main(MODEL_NAME = "depthwise_model_rabdomchars_perspective"):
         save_freq=500,
         options=None,
     )
-    model.fit_generator(generator=generate,validation_data=real_dataset,validation_steps=5,epochs=10000,steps_per_epoch=50,callbacks=[WandbCallback(),check])
+    print("training model for {} epochs".format(epochs))
+    model.fit_generator(generator=generate,validation_data=real_dataset,validation_steps=5,epochs=int(epochs),steps_per_epoch=50,callbacks=[WandbCallback(),check])
     converter = tf.lite.TFLiteConverter.from_keras_model(model)
     tflite_model = converter.convert()
 
@@ -80,4 +81,4 @@ def main(MODEL_NAME = "depthwise_model_rabdomchars_perspective"):
       f.write(tflite_model)
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1])
