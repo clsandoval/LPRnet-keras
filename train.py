@@ -6,7 +6,7 @@ import os
 import tensorflow.keras as keras
 import keras.backend as K
 from generator import DataGenerator
-from model_depthwise import LPRnet,CTCLoss,global_context
+from LPRnet.LPRnet_separable import LPRnet,CTCLoss,global_context
 
 import wandb
 from wandb.keras import WandbCallback
@@ -16,6 +16,9 @@ CHARS = "ABCDEFGHIJKLMNPQRSTUVWXYZ0123456789" # exclude I, O
 CHARS_DICT = {char:i for i, char in enumerate(CHARS)}
 DECODE_DICT = {i:char for i, char in enumerate(CHARS)}
 NUM_CLASS = len(CHARS)+1
+
+MODEL_PATH = 'trained_models'
+TFLITE_PATH = 'tflite_models'
 
 real_images_val = glob.glob('C:\\Users\\carlos\\Desktop\\cs\\ml-sandbox\\ANPR\\LPRnet-keras\\valid\\*\\*.png')
 real_images = glob.glob('C:\\Users\\carlos\\Desktop\\cs\\ml-sandbox\\ANPR\\LPRnet-keras\\test\\marty\\*\\*.png')
@@ -28,11 +31,13 @@ def main(MODEL_NAME = "depthwise_model_rabdomchars_perspective"):
     "batch_size": 64
     }
 
-    if os.path.exists(MODEL_NAME):
+    if os.path.exists(os.path.join(MODEL_PATH,MODEL_NAME)):
+        print("Loading model")
         model = keras.models.load_model(
-            MODEL_NAME, custom_objects={"global_context": global_context, "CTCLoss": CTCLoss  }
+            os.path.join(MODEL_PATH,MODEL_NAME), custom_objects={"global_context": global_context, "CTCLoss": CTCLoss  }
         )
     else:
+        print("Building model from scratch")
         model = LPRnet()
         model.compile(optimizer=keras.optimizers.Adam(learning_rate=1e-3),loss =CTCLoss)
         model.build((1,24,94,3))
@@ -56,7 +61,7 @@ def main(MODEL_NAME = "depthwise_model_rabdomchars_perspective"):
 
     generate = DataGenerator()
     check = tf.keras.callbacks.ModelCheckpoint(
-        './{}'.format(MODEL_NAME),
+        os.path.join(MODEL_PATH,MODEL_NAME),
         monitor="val_loss",
         verbose=0,
         save_best_only=False,
@@ -66,3 +71,13 @@ def main(MODEL_NAME = "depthwise_model_rabdomchars_perspective"):
         options=None,
     )
     model.fit_generator(generator=generate,validation_data=real_dataset,validation_steps=5,epochs=10000,steps_per_epoch=50,callbacks=[WandbCallback(),check])
+    converter = tf.lite.TFLiteConverter.from_keras_model(model)
+    tflite_model = converter.convert()
+
+    model.save(MODEL_NAME)
+
+    with open("./{}/{}.tflite".format(TFLITE_PATH,MODEL_NAME), 'wb') as f:
+      f.write(tflite_model)
+
+if __name__ == "__main__":
+    main()
