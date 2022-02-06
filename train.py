@@ -23,7 +23,7 @@ TFLITE_PATH = 'tflite_models'
 real_images_val = glob.glob('C:\\Users\\carlos\\Desktop\\cs\\ml-sandbox\\ANPR\\LPRnet-keras\\valid\\*\\*.png')
 real_images = glob.glob('C:\\Users\\carlos\\Desktop\\cs\\ml-sandbox\\ANPR\\LPRnet-keras\\test\\marty\\*\\*.png')
 
-def main(epochs,MODEL_NAME = "depthwise_model_rabdomchars_perspective_tflite"):
+def main(epochs,MODEL_NAME = "depthwise_model_randomchars_perspective_tflite"):
     wandb.init(project=MODEL_NAME, entity="clsandoval")
     wandb.config = {
     "learning_rate": 0.001,
@@ -71,7 +71,7 @@ def main(epochs,MODEL_NAME = "depthwise_model_rabdomchars_perspective_tflite"):
         options=None,
     )
     print("training model for {} epochs".format(epochs))
-    model.fit_generator(generator=generate,validation_data=real_dataset,validation_steps=5,epochs=int(epochs),steps_per_epoch=50,callbacks=[WandbCallback(),check])
+    model.fit_generator(generator=generate,validation_data=real_dataset,validation_steps=3,epochs=int(epochs),steps_per_epoch=50,callbacks=[WandbCallback(),check])
     converter = tf.lite.TFLiteConverter.from_keras_model(model)
     tflite_model = converter.convert()
 
