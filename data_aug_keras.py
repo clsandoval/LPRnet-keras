@@ -4,7 +4,7 @@ import cv2
 
 
 def motion_blur(img):
-    kernel_s= np.random.randint(5,10,1)
+    kernel_s= np.random.randint(3,6,1)
     kernel_size = kernel_s[0]
     kernel_v = np.zeros((kernel_size, kernel_size))
     kernel_h = np.copy(kernel_v)
@@ -31,7 +31,7 @@ def jitter(img, jitter=0.1):
     img = cv2.resize(img, (int(j_width), int(j_height)))
     return img
 
-def rotate(img, angle=np.random.randint(5,20)):
+def rotate(img, angle=np.random.randint(5,15)):
 
     scale = random.uniform(0.9, 1.1)
     angle = random.uniform(-angle, angle)
@@ -46,7 +46,7 @@ def rotate(img, angle=np.random.randint(5,20)):
 def perspective(img):
 
     h, w, _ = img.shape
-    per = random.uniform(0.05, 0.3)
+    per = random.uniform(0.05,0.4)
     w_p = int(w * per)
     h_p = int(h * per)
 
@@ -105,19 +105,19 @@ def data_augmentation(img):
     img = jitter(img)
 
     if random.choice([True, False]):
-        img = rotate(img)
-
-    if random.choice([True,False]):
-        img = motion_blur(img)
-
-    if random.choice([True, False]):
         img = perspective(img)
     if random.choice([True, False]):
-        img = blur(img)
+        img = rotate(img)
+
+    #if random.choice([True,False]):
+    #    img = motion_blur(img)
+#
+    #if random.choice([True, False]):
+    #    img = blur(img)
         
 
     img = crop_subimage(img)
-    bright_scale = random.uniform(0.6, 1.2)
+    bright_scale = random.uniform(0.4, 1.2)
     img_out = hsv_space_variation(img, scale=bright_scale)
 
     return img_out

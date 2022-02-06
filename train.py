@@ -10,20 +10,20 @@ from LPRnet.LPRnet_separable import LPRnet,CTCLoss,global_context
 
 import wandb
 from wandb.keras import WandbCallback
-
 IMAGE_SHAPE = [94,24]
 CHARS = "ABCDEFGHIJKLMNPQRSTUVWXYZ0123456789" # exclude I, O
 CHARS_DICT = {char:i for i, char in enumerate(CHARS)}
 DECODE_DICT = {i:char for i, char in enumerate(CHARS)}
 NUM_CLASS = len(CHARS)+1
 
+PROJECT_NAME = "LPRnet_keras"
 MODEL_PATH = 'trained_models'
 TFLITE_PATH = 'tflite_models'
 
 real_images_val = glob.glob('C:\\Users\\carlos\\Desktop\\cs\\ml-sandbox\\ANPR\\LPRnet-keras\\valid\\*\\*.png')
 real_images = glob.glob('C:\\Users\\carlos\\Desktop\\cs\\ml-sandbox\\ANPR\\LPRnet-keras\\test\\marty\\*\\*.png')
 
-def main(epochs,MODEL_NAME = "depthwise_model_rabdomchars_perspective"):
+def main(epochs,MODEL_NAME = "depthwise_model_rabdomchars_perspective_tflite"):
     wandb.init(project=MODEL_NAME, entity="clsandoval")
     wandb.config = {
     "learning_rate": 0.001,
@@ -74,8 +74,6 @@ def main(epochs,MODEL_NAME = "depthwise_model_rabdomchars_perspective"):
     model.fit_generator(generator=generate,validation_data=real_dataset,validation_steps=5,epochs=int(epochs),steps_per_epoch=50,callbacks=[WandbCallback(),check])
     converter = tf.lite.TFLiteConverter.from_keras_model(model)
     tflite_model = converter.convert()
-
-    model.save(MODEL_NAME)
 
     with open("./{}/{}.tflite".format(TFLITE_PATH,MODEL_NAME), 'wb') as f:
       f.write(tflite_model)
