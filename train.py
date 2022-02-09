@@ -10,6 +10,7 @@ from LPRnet.LPRnet_separable import LPRnet,CTCLoss,global_context
 
 import wandb
 from wandb.keras import WandbCallback
+
 IMAGE_SHAPE = [94,24]
 CHARS = "ABCDEFGHIJKLMNPQRSTUVWXYZ0123456789" # exclude I, O
 CHARS_DICT = {char:i for i, char in enumerate(CHARS)}
@@ -23,7 +24,7 @@ TFLITE_PATH = 'tflite_models'
 real_images_val = glob.glob('C:\\Users\\carlos\\Desktop\\cs\\ml-sandbox\\ANPR\\LPRnet-keras\\valid\\*\\*.png')
 real_images = glob.glob('C:\\Users\\carlos\\Desktop\\cs\\ml-sandbox\\ANPR\\LPRnet-keras\\test\\marty\\*\\*.png')
 
-def main(epochs,MODEL_NAME = "depthwise_model_randomchars_perspective_tflite"):
+def main(epochs,MODEL_NAME = "depthwise_model_randomchars_perspective_multiple_fonts"):
     wandb.init(project=MODEL_NAME, entity="clsandoval")
     wandb.config = {
     "learning_rate": 0.001,
