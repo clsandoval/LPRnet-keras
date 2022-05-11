@@ -33,9 +33,6 @@ def capture_video(video_path,frame_buffer,results):
     while cap.isOpened():
         framecounter +=1 
         ret, frame = cap.read() # Capture each frame of video
-        ret, frame = cap.read() # Capture each frame of video
-        ret, frame = cap.read() # Capture each frame of video
-
         if not ret or frame is None:
             # raise LPRException("cap.read() returned invalid values!")
             break # Execution is finished
