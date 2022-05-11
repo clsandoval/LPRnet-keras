@@ -24,7 +24,7 @@ TFLITE_PATH = 'tflite_models'
 real_images_val = glob.glob('C:\\Users\\carlos\\Desktop\\cs\\ml-sandbox\\ANPR\\LPRnet-keras\\valid\\*\\*.png')
 real_images = glob.glob('C:\\Users\\carlos\\Desktop\\cs\\ml-sandbox\\ANPR\\LPRnet-keras\\test\\marty\\*\\*.png')
 
-def main(epochs,MODEL_NAME = "depthwise_model_randomchars_perspective_multiple_fonts"):
+def main(epochs,MODEL_NAME = "lprnet"):
     wandb.init(project=MODEL_NAME, entity="clsandoval")
     wandb.config = {
     "learning_rate": 0.001,

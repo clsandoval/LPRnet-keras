@@ -19,16 +19,10 @@ class ImageGenerator:
         for c in char_set:
             self.letters.append(c)
             self.digits.append(c)
-            #if str.isalpha(c):
-            #    self.letters.append(c)
-            #else:
-            #    self.digits.append(c)
 
         self.char_height = char_height
         self.ttf_dir = ttf_dir
         self.fonts, self.font_char_ims = self.load_fonts(ttf_dir)
-
-
         green = [0,1,0]
         white = [1, 1, 1]
         yellow = [0, 1, 1]
@@ -66,18 +60,6 @@ class ImageGenerator:
             yield c, np.array(im)[:, :, 0]
 
     def generate_code_trial(self):
-        # random 1~2 letters + 1~2 digits + 2~3 letters
-        pre_n = random.randint(1, 2)
-        pre_letters = [random.choice(self.letters) for _ in range(pre_n)]
-        digit_n = random.randint(1, 2)
-        digits = [random.choice(self.digits) for _ in range(digit_n)]
-        post_n = random.randint(2, 3)
-        post_letters = [random.choice(self.letters) for _ in range(post_n)]
-
-        code = ''.join(pre_letters) + ''.join(digits) + '-' + ''.join(post_letters)
-        return code
-
-    def generate_code(self):
         # random 1~2 letters + 1~2 digits + 2~3 letters
         pre_n = random.randint(1, 2)
         pre_letters = [random.choice(self.letters) for _ in range(pre_n)]
