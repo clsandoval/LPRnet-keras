@@ -1,4 +1,4 @@
-import re, datetime, cv2, numpy as np, tensorflow as tf, sys
+import re, datetime,time, cv2, numpy as np, tensorflow as tf, sys
 
 CHARS = "ABCDEFGHIJKLMNPQRSTUVWXYZ0123456789" # exclude I, O
 CHARS_DICT = {char:i for i, char in enumerate(CHARS)}
@@ -8,21 +8,27 @@ def capture_video(video_path):
 
     cap = cv2.VideoCapture(video_path)
     interpreter = tf.lite.Interpreter(model_path='detection.tflite')
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
     interpreter.allocate_tensors()
 
     recog_interpreter = tf.lite.Interpreter(model_path='recognition.tflite')
-    recog_interpreter.allocate_tensors()
-
-    input_details = interpreter.get_input_details()
-    output_details = interpreter.get_output_details()
-
     recog_input_details = recog_interpreter.get_input_details()
     recog_output_details = recog_interpreter.get_output_details()
+    recog_interpreter.resize_tensor_input(recog_input_details[0]['index'], (1, 24, 94, 3))
+    recog_interpreter.allocate_tensors()
+
     frame_counter = 0
     print('starting')
     while cap.isOpened():
         frame_counter +=1 
         ret, frame = cap.read() # Capture each frame of video
+        start = time.perf_counter()
+        demo_frame = cv2.resize(frame, (680,480), interpolation=cv2.INTER_AREA)
+
+        if frame_counter % 2 == 0:
+            cv2.imshow('window-name', demo_frame)
+            continue
 
         if not ret or frame is None:
             # raise LPRException("cap.read() returned invalid values!")
@@ -32,7 +38,6 @@ def capture_video(video_path):
         # Execute detection:
         # -- Resize frame to 320x320 square
         resized = cv2.resize(frame, (320,320), interpolation=cv2.INTER_AREA)
-        demo_frame = cv2.resize(frame, (680,480), interpolation=cv2.INTER_AREA)
         input_data = resized.astype(np.float32)          # Set as 3D RGB float array
         input_data /= 255.                               # Normalize
         input_data = np.expand_dims(input_data, axis=0)  # Batch dimension (wrap in 4D)
@@ -62,13 +67,13 @@ def capture_video(video_path):
                     boxes[0][i], frame,
                     recog_interpreter, recog_input_details, recog_output_details,
                 )
-                print(text)
-        if text != None:
-            x1, x2, y1, y2 = int(boxes[0][i][1] * 680 ), int(boxes[0][i][3] * 680 ), int(boxes[0][i][0] * 480 ), int(boxes[0][i][2] * 480 )
+                print(text, time.perf_counter()-start)
+                if text != None:
+                    x1, x2, y1, y2 = int(boxes[0][i][1] * 680 ), int(boxes[0][i][3] * 680 ), int(boxes[0][i][0] * 480 ), int(boxes[0][i][2] * 480 )
 
-            demo_frame= cv2.rectangle(demo_frame, (x1,y1), (x2,y2), color = (0, 255, 0))
-            demo_frame = cv2.putText(demo_frame, text, (int(x1+x2-x1),y1), cv2.FONT_HERSHEY_SIMPLEX, 
-                   1, color = (255, 0, 0))
+                    demo_frame= cv2.rectangle(demo_frame, (x1,y1), (x2,y2), color = (0, 255, 0))
+                    demo_frame = cv2.putText(demo_frame, text, (int(x1+x2-x1),y1), cv2.FONT_HERSHEY_SIMPLEX, 
+                           1, color = (255, 0, 0))
 
         cv2.imshow('window-name', demo_frame)
         if cv2.waitKey(10) & 0xFF == ord('q'):

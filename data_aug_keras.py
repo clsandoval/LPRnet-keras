@@ -1,6 +1,24 @@
 import random
 import numpy as np
 import cv2
+from straug.warp import Curve,Distort,Stretch
+from straug.geometry import Perspective,Rotate,Shrink
+from straug.pattern import Grid,VGrid,HGrid,RectGrid,EllipseGrid
+from straug.blur import GaussianBlur,DefocusBlur,MotionBlur,GlassBlur,ZoomBlur
+from straug.noise import GaussianNoise,ShotNoise,ImpulseNoise,SpeckleNoise
+from straug.weather import Fog,Snow,Frost,Rain,Shadow
+from straug.camera import Contrast,Brightness,JpegCompression,Pixelate
+from straug.process import Posterize,Solarize,Invert,Equalize,AutoContrast,Sharpness,Color
+from PIL import Image
+
+augmentations = [Curve(),Distort(),Stretch(),
+Perspective(),Rotate(),Shrink(),
+Grid(),VGrid(),HGrid(),RectGrid(),EllipseGrid(),
+GaussianBlur(),DefocusBlur(),MotionBlur(),GlassBlur(),ZoomBlur(),
+GaussianNoise(),ShotNoise(),ImpulseNoise(),SpeckleNoise(),
+Fog(),Snow(),Frost(),Rain(),Shadow(),
+Contrast(),Brightness(),JpegCompression(),Pixelate(),
+Posterize(),Solarize(),Invert(),Equalize(),AutoContrast(),Sharpness(),Color()]
 
 
 def motion_blur(img):
@@ -101,23 +119,13 @@ def hsv_space_variation(ori_img, scale):
     return rgb_img
 
 def data_augmentation(img):
+    img = crop_subimage(img)
+    bright_scale = random.uniform(0.8, 1.2)
+    img_out = hsv_space_variation(img, scale=bright_scale)
+    im = Image.fromarray(img_out)
 
-    img = jitter(img)
-
-    if random.choice([True, False]):
-        img = rotate(img)
-
-    if random.choice([True,False]):
-        img = motion_blur(img)
-
-    if random.choice([True, False]):
-        img = perspective(img)
-    if random.choice([True, False]):
-        img = blur(img)
+    im = random.choice(augmentations)(im,mag=random.randint(0,3))
         
 
-    img = crop_subimage(img)
-    bright_scale = random.uniform(0.4, 1.2)
-    img_out = hsv_space_variation(img, scale=bright_scale)
-
-    return img_out
+    im_out = np.array(im)
+    return im_out

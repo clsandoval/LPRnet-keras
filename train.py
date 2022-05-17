@@ -24,13 +24,8 @@ TFLITE_PATH = 'tflite_models'
 real_images_val = glob.glob('C:\\Users\\carlos\\Desktop\\cs\\ml-sandbox\\ANPR\\LPRnet-keras\\valid\\*\\*.png')
 real_images = glob.glob('C:\\Users\\carlos\\Desktop\\cs\\ml-sandbox\\ANPR\\LPRnet-keras\\test\\marty\\*\\*.png')
 
-def main(epochs,MODEL_NAME = "lprnet"):
+def main(epochs,MODEL_NAME = "lprnet_straug_twofonts"):
     wandb.init(project=MODEL_NAME, entity="clsandoval")
-    wandb.config = {
-    "learning_rate": 0.001,
-    "epochs": 400,
-    "batch_size": 64
-    }
 
     if os.path.exists(os.path.join(MODEL_PATH,MODEL_NAME)):
         print("Loading model")

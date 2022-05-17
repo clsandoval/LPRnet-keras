@@ -11,8 +11,8 @@ from PIL import ImageDraw
 from PIL import ImageFont
 
 class ImageGenerator:
-    def __init__(self, ttf_dir='./fonts/', char_set='ABCDEFGHJKLMNPQRSTUVWXYZ0123456789', char_height=36):
-
+    def __init__(self, ttf_dir='./fonts/', char_set='ABCDEFGHJKLMNPQRSTUVWXYZ0123456789', char_height=36, demo = False):
+        self.demo = demo
         self.chars = char_set
         self.letters = []
         self.digits = []
@@ -152,9 +152,10 @@ class ImageGenerator:
 
             Plate = Plate.astype(np.float32)
             Plate = data_augmentation(Plate)
-
-            #images.append(Plate)
-            images.append(cv2.resize(Plate,(94,24))/256)
+            if self.demo:
+                images.append(Plate)
+            else:
+                images.append(cv2.resize(Plate,(94,24))/256.)
             labels.append(code)
 
         #load sample from train images
