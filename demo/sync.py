@@ -26,9 +26,9 @@ def capture_video(video_path):
         start = time.perf_counter()
         demo_frame = cv2.resize(frame, (680,480), interpolation=cv2.INTER_AREA)
 
-        if frame_counter % 2 == 0:
-            cv2.imshow('window-name', demo_frame)
-            continue
+        #if frame_counter % 2 == 0:
+        #    cv2.imshow('window-name', demo_frame)
+        #    continue
 
         if not ret or frame is None:
             # raise LPRException("cap.read() returned invalid values!")
@@ -67,7 +67,7 @@ def capture_video(video_path):
                     boxes[0][i], frame,
                     recog_interpreter, recog_input_details, recog_output_details,
                 )
-                print(text, time.perf_counter()-start)
+                print(text, time.perf_counter()-start,flush=True)
                 if text != None:
                     x1, x2, y1, y2 = int(boxes[0][i][1] * 680 ), int(boxes[0][i][3] * 680 ), int(boxes[0][i][0] * 480 ), int(boxes[0][i][2] * 480 )
 
