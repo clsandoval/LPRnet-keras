@@ -1,6 +1,8 @@
+#%%
 import numpy as np
 import tensorflow as tf
 import tensorflow.keras as keras
+import keras.layers as layers
 import keras.backend as K
 from generator import DataGenerator
 
@@ -9,6 +11,7 @@ CHARS = "ABCDEFGHIJKLMNPQRSTUVWXYZ0123456789" # exclude I, O
 CHARS_DICT = {char:i for i, char in enumerate(CHARS)}
 DECODE_DICT = {i:char for i, char in enumerate(CHARS)}
 NUM_CLASS = len(CHARS)+1
+
 
 def CTCLoss(y_true, y_pred):
     # Compute the training-time loss value
@@ -23,102 +26,83 @@ def CTCLoss(y_true, y_pred):
     
     return loss
 
-class small_basic_block(keras.layers.Layer):
-
-    def __init__(self,out_channels,name=None,**kwargs):
-        super().__init__(**kwargs)
-        out_div4=int(out_channels/4)
-        self.main_layers = [
-            keras.layers.SeparableConv2D(out_div4,(1,1),padding='same',kernel_initializer=keras.initializers.glorot_uniform(),bias_initializer=keras.initializers.constant()),
-            keras.layers.BatchNormalization(),
-            keras.layers.ReLU(),
-            keras.layers.SeparableConv2D(out_div4,(3,1),padding='same',kernel_initializer=keras.initializers.glorot_uniform(),bias_initializer=keras.initializers.constant()),
-            keras.layers.BatchNormalization(),
-            keras.layers.ReLU(),
-            keras.layers.SeparableConv2D(out_div4,(1,3),padding='same',kernel_initializer=keras.initializers.glorot_uniform(),bias_initializer=keras.initializers.constant()),
-            keras.layers.BatchNormalization(),
-            keras.layers.ReLU(),
-            keras.layers.SeparableConv2D(out_channels,(1,1),padding='same',kernel_initializer=keras.initializers.glorot_uniform(),bias_initializer=keras.initializers.constant()),
-            keras.layers.BatchNormalization(),
-            keras.layers.ReLU(),
-        ]  
-    
-    def call(self,input):
-        x = input
-        for layer in self.main_layers:
-            x = layer(x)
-        return x
 
 
-class global_context(keras.layers.Layer):
-    def __init__(self,kernel_size,stride,**kwargs):
-        super().__init__(**kwargs)
-        self.ksize = kernel_size
-        self.stride = stride
+def smallblock(out_channels,inputs):
+    out_div4=int(out_channels/4)
+    main_layers = [
+        keras.layers.SeparableConv2D(out_div4,(1,1),padding='same',kernel_initializer=keras.initializers.glorot_uniform(),bias_initializer=keras.initializers.constant()),
+        keras.layers.BatchNormalization(),
+        keras.layers.ReLU(),
+        keras.layers.SeparableConv2D(out_div4,(3,1),padding='same',kernel_initializer=keras.initializers.glorot_uniform(),bias_initializer=keras.initializers.constant()),
+        keras.layers.BatchNormalization(),
+        keras.layers.ReLU(),
+        keras.layers.SeparableConv2D(out_div4,(1,3),padding='same',kernel_initializer=keras.initializers.glorot_uniform(),bias_initializer=keras.initializers.constant()),
+        keras.layers.BatchNormalization(),
+        keras.layers.ReLU(),
+        keras.layers.SeparableConv2D(out_channels,(1,1),padding='same',kernel_initializer=keras.initializers.glorot_uniform(),bias_initializer=keras.initializers.constant()),
+        keras.layers.BatchNormalization(),
+        keras.layers.ReLU(),
+    ]  
+    x = inputs
+    for layer in main_layers:
+        x = layer(x)
+    return x
 
-    def call(self, input):
-        x = input 
-        avg_pool = keras.layers.AveragePooling2D(pool_size=self.ksize,strides=self.stride,padding='same')(x)
-        sq = keras.layers.Lambda(lambda x: tf.math.square(x))(avg_pool)
-        sqm = keras.layers.Lambda(lambda x: tf.math.reduce_mean(x))(sq)
-        out = keras.layers.Lambda(lambda x: tf.math.divide(x[0], x[1]))([avg_pool , sqm])
-        #out = keras.layers.Lambda(lambda x: K.l2_normalize(x,axis=1))(avg_pool)
-        return out
 
-    def get_config(self):
-        return {
-            "kernel_size": self.ksize,
-            "stride": self.stride,
-        }
+def LPRnet():
+    #cnn layers
+    input_layer = tf.keras.Input(shape=(24, 94, 3))
+    x_1 = keras.layers.SeparableConv2D(64,kernel_size = (3,3),strides=1,padding='same',name='main_conv1')(input_layer)
+    x = keras.layers.BatchNormalization(name='BN1')(x_1)
+    x = keras.layers.ReLU(name='RELU1')(x)
+    x = keras.layers.MaxPool2D(pool_size=(3,3),strides=(1,1),name='maxpool2d_1',padding='same')(x)
+    x_2 = smallblock(128,x)
+    x = keras.layers.MaxPool2D(pool_size=(3,3),strides=(1,2),name='maxpool2d_2',padding='same')(x_2)
+    x_3 = smallblock(256,x)
+    x_4 = smallblock(256,x_3)
+    x = keras.layers.MaxPool2D(pool_size=(3,3),strides=(1,2),name='maxpool2d_3',padding='same')(x_4)
+    x = keras.layers.Dropout(0.5)(x)
+    x = keras.layers.SeparableConv2D(256,(4,1),strides=1,padding='same',name='main_conv2')(x)
+    x = keras.layers.BatchNormalization()(x)
+    x = keras.layers.ReLU()(x)
+    x = keras.layers.Dropout(0.5)(x)
+    x = keras.layers.SeparableConv2D(NUM_CLASS,(1,13),padding='same',name='main_conv3')(x)
+    x = keras.layers.BatchNormalization()(x)
+    x_5 = keras.layers.ReLU()(x)
+    #gc layers ksize, stride
+    #(1,4)(1,4) 1
+    #(1,4)(1,4) 2
+    #(1,2)(1,2) 3
+    #(1,2)(1,2) 4
+    avg_pool_1 = keras.layers.AveragePooling2D(pool_size=(1,4),strides=(1,4),padding='same')(x_1)
+    sq_1 = keras.layers.Lambda(lambda x: tf.math.square(x))(avg_pool_1)
+    sqm_1 = keras.layers.Lambda(lambda x: tf.math.reduce_mean(x))(sq_1)
+    gc_1 = keras.layers.Lambda(lambda x: tf.math.divide(x[0], x[1]))([avg_pool_1 ,sqm_1])
 
-    @classmethod
-    def from_config(cls, config):
-        return cls(**config)
+    avg_pool_2 = keras.layers.AveragePooling2D(pool_size=(1,4),strides=(1,4),padding='same')(x_2)
+    sq_2 = keras.layers.Lambda(lambda x: tf.math.square(x))(avg_pool_2)
+    sqm_2 = keras.layers.Lambda(lambda x: tf.math.reduce_mean(x))(sq_2)
+    gc_2 = keras.layers.Lambda(lambda x: tf.math.divide(x[0], x[1]))([avg_pool_2 ,sqm_2])
 
-class LPRnet(keras.Model):
-    def __init__(self, input_shape=(24,94,3), **kwargs):
-        super(LPRnet, self).__init__(**kwargs)
-        self.input_layer = keras.layers.Input(input_shape)
-        self.cnn_layers= [
-            keras.layers.SeparableConv2D(64,kernel_size = (3,3),strides=1,padding='same',name='main_conv1',kernel_initializer=keras.initializers.glorot_uniform(),bias_initializer=keras.initializers.constant()),
-            keras.layers.BatchNormalization(name='BN1'),
-            keras.layers.ReLU(name='RELU1'),
-            keras.layers.MaxPool2D(pool_size=(3,3),strides=(1,1),name='maxpool2d_1',padding='same'),
-            small_basic_block(128),
-            keras.layers.MaxPool2D(pool_size=(3,3),strides=(1,2),name='maxpool2d_2',padding='same'),
-            small_basic_block(256),
-            small_basic_block(256),
-            keras.layers.MaxPool2D(pool_size=(3,3),strides=(1,2),name='maxpool2d_3',padding='same'),
-            keras.layers.Dropout(0.5),
-            keras.layers.SeparableConv2D(256,(4,1),strides=1,padding='same',name='main_conv2',kernel_initializer=keras.initializers.glorot_uniform(),bias_initializer=keras.initializers.constant()),
-            keras.layers.BatchNormalization(),
-            keras.layers.ReLU(),
-            keras.layers.Dropout(0.5),
-            keras.layers.SeparableConv2D(NUM_CLASS,(1,13),padding='same',name='main_conv3',kernel_initializer=keras.initializers.glorot_uniform(),bias_initializer=keras.initializers.constant()),  
-            keras.layers.BatchNormalization(),
-            keras.layers.ReLU(),
-        ]
-        self.out_layers = [
-            keras.layers.SeparableConv2D(NUM_CLASS,kernel_size=(1,1),strides=(1,1),padding='same',name='conv_out',kernel_initializer=keras.initializers.glorot_uniform(),bias_initializer=keras.initializers.constant()),
-        ]
-        self.out = self.call(self.input_layer)
+    avg_pool_3 = keras.layers.AveragePooling2D(pool_size=(1,2),strides=(1,2),padding='same')(x_3)
+    sq_3 = keras.layers.Lambda(lambda x: tf.math.square(x))(avg_pool_3)
+    sqm_3 = keras.layers.Lambda(lambda x: tf.math.reduce_mean(x))(sq_3)
+    gc_3 = keras.layers.Lambda(lambda x: tf.math.divide(x[0], x[1]))([avg_pool_3 ,sqm_3])
 
-    def call(self,inputs,training=False):
-        x = inputs
-        layer_outputs = []
-        for layer in self.cnn_layers:
-            x = layer(x)
-            layer_outputs.append(x)
-        scale1 = global_context((1,4),(1,4))(layer_outputs[0])
-        scale2 = global_context((1,4),(1,4))(layer_outputs[4])
-        scale3 = global_context((1,2),(1,2))(layer_outputs[6])
-        scale5 = global_context((1,2),(1,2))(layer_outputs[7])
-        sq = keras.layers.Lambda(lambda x: tf.math.square(x))(x)
-        sqm = keras.layers.Lambda(lambda x: tf.math.reduce_mean(x))(sq)
-        scale4 = keras.layers.Lambda(lambda x: tf.math.divide(x[0], x[1]))([x , sqm])
-        gc_concat = keras.layers.Lambda(lambda x: tf.concat([x[0], x[1], x[2], x[3], x[4]],3))([scale1, scale2, scale3, scale5,scale4])
-        for layer in self.out_layers:
-            gc_concat = layer(gc_concat)
-        logits = keras.layers.Lambda(lambda x: tf.math.reduce_mean(x[0],axis=1))([gc_concat])
-        logits = keras.layers.Softmax()(logits)
-        return logits
+    avg_pool_4 = keras.layers.AveragePooling2D(pool_size=(1,2),strides=(1,2),padding='same')(x_4)
+    sq_4 = keras.layers.Lambda(lambda x: tf.math.square(x))(avg_pool_4)
+    sqm_4 = keras.layers.Lambda(lambda x: tf.math.reduce_mean(x))(sq_4)
+    gc_4 = keras.layers.Lambda(lambda x: tf.math.divide(x[0], x[1]))([avg_pool_4 ,sqm_4])
+
+    sq_5= keras.layers.Lambda(lambda x: tf.math.square(x))(x_5)
+    sqm_5= keras.layers.Lambda(lambda x: tf.math.reduce_mean(x))(sq_5)
+    gc_5 = keras.layers.Lambda(lambda x: tf.math.divide(x[0], x[1]))([x_5, sqm_5])
+    gc_concat = keras.layers.Lambda(lambda x: tf.concat([x[0], x[1], x[2], x[3], x[4]],3))([gc_1, gc_2, gc_3, gc_4,gc_5])
+
+    gc_concat = keras.layers.SeparableConv2D(NUM_CLASS,kernel_size=(1,1),strides=(1,1),padding='same',name='conv_out') (gc_concat)
+    logits = keras.layers.Lambda(lambda x: tf.math.reduce_mean(x[0],axis=1))([gc_concat])
+    output = keras.layers.Softmax()(logits)
+
+    model = keras.Model(inputs =input_layer, outputs = output )
+    return model

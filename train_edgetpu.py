@@ -6,7 +6,7 @@ import os, sys
 import tensorflow.keras as keras
 import keras.backend as K
 from generator import DataGenerator
-from LPRnet.LPRnet_edgeTPU import LPRnet,CTCLoss,global_context
+from LPRnet.LPRnet_edgeTPU import LPRnet,CTCLoss
 
 import wandb
 from wandb.keras import WandbCallback
@@ -30,7 +30,7 @@ def main(epochs,MODEL_NAME = "LPRnet_edgetpu"):
     if os.path.exists(os.path.join(MODEL_PATH,MODEL_NAME)):
         print("Loading model")
         model = keras.models.load_model(
-            os.path.join(MODEL_PATH,MODEL_NAME), custom_objects={"global_context": global_context, "CTCLoss": CTCLoss  }
+            os.path.join(MODEL_PATH,MODEL_NAME), custom_objects={"CTCLoss": CTCLoss  }
         )
     else:
         print("Building model from scratch")
@@ -52,7 +52,7 @@ def main(epochs,MODEL_NAME = "LPRnet_edgetpu"):
 
     training_set = np.array(data,dtype=np.float32)
     training_labels = np.array(labels)
-    ragged = tf.ragged.constant(training_labels)
+    ragged = tf.ragged.constant(training_labels).to_tensor()
     real_dataset = tf.data.Dataset.from_tensor_slices((training_set,ragged)).batch(64)
 
     generate = DataGenerator()
@@ -63,7 +63,7 @@ def main(epochs,MODEL_NAME = "LPRnet_edgetpu"):
         save_best_only=False,
         save_weights_only=False,
         mode="auto",
-        save_freq=5,
+        save_freq=50,
         options=None,
     )
     print("training model for {} epochs".format(epochs))
