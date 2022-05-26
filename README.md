@@ -31,7 +31,7 @@ The model architecture is implemented with the following modifications:
 
 1. Depthwise separable convolutional layers are used as a drop in replacement for the regular convolutional layers.
 2. Global context is used concatenating each small basic block as suggested in the paper.
-[Architecture](LPRnet.pdf)
+![Architecture](LPRnet.pdf)
 ## Looking forward 
 1. Improve synthetic data generation. 
 2. Make implementation compatible with google's coral TPU compiler.
