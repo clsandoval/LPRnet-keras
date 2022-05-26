@@ -13,7 +13,7 @@ This repo contains all the code necessary to train LPRnet on a synthetic dataset
 4. Dataset augmentation adopted from the proposed system in https://arxiv.org/abs/2108.06949, code available at https://github.com/roatienza/straug
 
 ## Training
-To train LPRnet, run the following script to train with 10000 epochs:
+To train LPRnet, run the following script to train with 10000 epochs.
 ```shell
 python train.py 10000
 ```
@@ -31,7 +31,7 @@ The model architecture is implemented with the following modifications:
 
 1. Depthwise separable convolutional layers are used as a drop in replacement for the regular convolutional layers.
 2. Global context is used concatenating each small basic block as suggested in the paper.
-[Architecture](LPRnet.PNG)
+[Architecture](LPRnet.pdf)
 ## Looking forward 
 1. Improve synthetic data generation. 
 2. Make implementation compatible with google's coral TPU compiler.
