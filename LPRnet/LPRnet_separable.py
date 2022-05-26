@@ -49,7 +49,6 @@ class small_basic_block(keras.layers.Layer):
             x = layer(x)
         return x
 
-#test this later
 
 class global_context(keras.layers.Layer):
     def __init__(self,kernel_size,stride,**kwargs):

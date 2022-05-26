@@ -39,3 +39,4 @@ A diagram of the architecture is shown below.
 ## Looking forward 
 1. Improve synthetic data generation. 
 2. Make implementation compatible with google's coral TPU compiler. Currently only 50% of ops are mapped to TPU once compiled with google's edgetpu compiler.
+3. Test training without synthetic data with annotated images of licence plates.
