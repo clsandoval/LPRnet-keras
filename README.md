@@ -26,7 +26,7 @@ python demo/sync.py
 ## Dataset generation
 A keras generator is used to generate synthetic images at train time. Fonts are located in ```\fonts```. 
 A sample set of synthetic plates is shown below. 
-![plates](sample_plates\sample_plates.png)
+![plates](sample_plates/sample_plates.png)
 ## Model architecture
 The model architecture is implemented with the following modifications:
 
