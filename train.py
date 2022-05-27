@@ -5,8 +5,10 @@ import tensorflow as tf
 import os, sys
 import tensorflow.keras as keras
 import keras.backend as K
+import argparse
 from generator import DataGenerator
 from LPRnet.LPRnet_separable import LPRnet,CTCLoss,global_context
+from LPRnet.LPRnet_edgeTPU import LPRnet as LPRnet_edgeTPU
 
 import wandb
 from wandb.keras import WandbCallback
@@ -24,7 +26,9 @@ TFLITE_PATH = 'tflite_models'
 real_images_val = glob.glob('C:\\Users\\carlos\\Desktop\\cs\\ml-sandbox\\ANPR\\LPRnet-keras\\valid\\*\\*.png')
 real_images = glob.glob('C:\\Users\\carlos\\Desktop\\cs\\ml-sandbox\\ANPR\\LPRnet-keras\\test\\marty\\*\\*.png')
 
-def main(epochs,MODEL_NAME = "lprnet_straug_twofonts"):
+def main(args):
+    MODEL_NAME = args['name']
+    epochs = args['epochs']
     wandb.init(project=MODEL_NAME, entity="clsandoval")
 
     if os.path.exists(os.path.join(MODEL_PATH,MODEL_NAME)):
@@ -34,10 +38,13 @@ def main(epochs,MODEL_NAME = "lprnet_straug_twofonts"):
         )
     else:
         print("Building model from scratch")
-        model = LPRnet()
-        model.compile(optimizer=keras.optimizers.Adam(learning_rate=1e-3),loss =CTCLoss)
-        model.build((1,24,94,3))
-
+        if args['arch'] != "edgetpu":
+            model = LPRnet()
+            model.compile(optimizer=keras.optimizers.Adam(learning_rate=1e-3),loss =CTCLoss)
+            model.build((1,24,94,3))
+        else:
+            model = LPRnet_edgeTPU()
+            model.compile(optimizer=keras.optimizers.Adam(learning_rate=1e-3),loss =CTCLoss)
 
     data = []
     labels = []
@@ -75,4 +82,9 @@ def main(epochs,MODEL_NAME = "lprnet_straug_twofonts"):
       f.write(tflite_model)
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    parser = argparse.ArgumentParser(description='Description of your program')
+    parser.add_argument('-e','--epochs', help='Number of epochs', required=True)
+    parser.add_argument('-a','--arch', help='Architecture to use', required=True)
+    parser.add_argument('-n','--name', help='Model name', required=True)
+    args = vars(parser.parse_args())
+    main(args)

@@ -38,5 +38,5 @@ A diagram of the architecture is shown below.
 ![Architecture](docs/LPRnet.png)
 ## Looking forward 
 1. Improve synthetic data generation. 
-2. Make implementation compatible with google's coral TPU compiler. Currently only 50% of ops are mapped to TPU once compiled with google's edgetpu compiler.
+2. Make implementation compatible with google's coral TPU compiler. Currently only 32/52 ops are mapped to the TPU (no depthwise layers)
 3. Test training without synthetic data with annotated images of licence plates.
