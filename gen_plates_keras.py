@@ -9,6 +9,31 @@ from data_aug_keras import data_augmentation
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
+import cv2
+import glob
+class RealImageGenerator:
+    def __init__(self,image_path = "data//*//*//*.png"):
+        self.images =  glob.glob(image_path)
+        pass
+    
+    def generate_images(self, number, training = True):
+        images,labels = [],[]
+        random.shuffle(self.images)
+        i=0
+        for fl in self.images:
+            label = fl.split('\\')[-1].split('_')[0].split('-')[0]
+            img = cv2.imread(fl)
+            Plate = img.astype(np.float32)
+            Plate = data_augmentation(Plate)
+            if training == False:
+                images.append(Plate)
+            else:
+                images.append(cv2.resize(Plate,(94,24))/256.)
+            labels.append(label)
+            if i == number-1:
+                break
+            i+=1
+        return images, labels
 
 class ImageGenerator:
     def __init__(self, ttf_dir='./fonts/', char_set='ABCDEFGHJKLMNPQRSTUVWXYZ0123456789', char_height=36, demo = False):

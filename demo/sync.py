@@ -26,17 +26,13 @@ def capture_video(video_path):
         start = time.perf_counter()
         demo_frame = cv2.resize(frame, (680,480), interpolation=cv2.INTER_AREA)
 
-        #if frame_counter % 2 == 0:
+        if frame_counter % 2 == 0:
         #    cv2.imshow('window-name', demo_frame)
-        #    continue
+            continue
 
         if not ret or frame is None:
             # raise LPRException("cap.read() returned invalid values!")
             break # Execution is finished
-
-
-        # Execute detection:
-        # -- Resize frame to 320x320 square
         resized = cv2.resize(frame, (320,320), interpolation=cv2.INTER_AREA)
         input_data = resized.astype(np.float32)          # Set as 3D RGB float array
         input_data /= 255.                               # Normalize
@@ -45,17 +41,8 @@ def capture_video(video_path):
         # Initialize input tensor
         interpreter.set_tensor(input_details[0]['index'], input_data)
         interpreter.invoke()
-
-        # Confidence values
-        # output_data = [ n = # of classes [ confidence values of boxes ] ]
-
-        # details = [
-        #     {"index": [ n = # of classes [ confidence values of boxes ] ]},
-        #     {"index": [ n = # of classes [ details of boxes ] ]}
-        # ]
         output_data = interpreter.get_tensor(output_details[0]['index'])
 
-        # Bounding boxes
         boxes = interpreter.get_tensor(output_details[1]['index'])
 
         text = None
@@ -68,12 +55,11 @@ def capture_video(video_path):
                     recog_interpreter, recog_input_details, recog_output_details,
                 )
                 print(text, time.perf_counter()-start,flush=True)
-                if text != None:
-                    x1, x2, y1, y2 = int(boxes[0][i][1] * 680 ), int(boxes[0][i][3] * 680 ), int(boxes[0][i][0] * 480 ), int(boxes[0][i][2] * 480 )
-
-                    demo_frame= cv2.rectangle(demo_frame, (x1,y1), (x2,y2), color = (0, 255, 0))
-                    demo_frame = cv2.putText(demo_frame, text, (int(x1+x2-x1),y1), cv2.FONT_HERSHEY_SIMPLEX, 
-                           1, color = (255, 0, 0))
+                #if text != None:
+                #    x1, x2, y1, y2 = int(boxes[0][i][1] * 680 ), int(boxes[0][i][3] * 680 ), int(boxes[0][i][0] * 480 ), int(boxes[0][i][2] * 480 )
+                #    demo_frame= cv2.rectangle(demo_frame, (x1,y1), (x2,y2), color = (0, 255, 0))
+                #    demo_frame = cv2.putText(demo_frame, text, (int(x1+x2-x1),y1), cv2.FONT_HERSHEY_SIMPLEX, 
+                #           1, color = (255, 0, 0))
 
         cv2.imshow('window-name', demo_frame)
         if cv2.waitKey(10) & 0xFF == ord('q'):
