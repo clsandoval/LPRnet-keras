@@ -29,7 +29,11 @@ real_images = glob.glob('C:\\Users\\carlos\\Desktop\\cs\\ml-sandbox\\ANPR\\LPRne
 def main(args):
     MODEL_NAME = args['name']
     epochs = args['epochs']
-    wandb.init(project=MODEL_NAME, entity="clsandoval")
+    wandb.init(
+        project="LPRnet-keras",
+        entity="clsandoval",
+        name=MODEL_NAME,
+    )
 
     if os.path.exists(os.path.join(MODEL_PATH,MODEL_NAME)):
         print("Loading model")
