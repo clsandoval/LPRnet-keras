@@ -62,6 +62,17 @@ class global_context(keras.layers.Layer):
         out = keras.layers.Lambda(lambda x: tf.math.divide(x[0], x[1]))([avg_pool , sqm])
         return out
 
+        
+    def get_config(self):
+        return {
+            "kernel_size": self.ksize,
+            "stride": self.stride,
+        }
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(**config)
+
 class LPRnet(keras.Model):
     def __init__(self, input_shape=(24,94,3), **kwargs):
         super(LPRnet, self).__init__(**kwargs)

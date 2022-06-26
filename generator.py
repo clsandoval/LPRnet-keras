@@ -4,6 +4,7 @@ import tensorflow as tf
 
 gen = ImageGenerator()
 realgen = RealImageGenerator()
+ccpd_realgen = RealImageGenerator(image_path = "C://Users//carlos//Desktop//cs//datasets//CCPD-PLATES//*.png")
 
 IMAGE_SHAPE = [94,24]
 CHARS = "ABCDEFGHIJKLMNPQRSTUVWXYZ0123456789" # exclude I, O
@@ -49,3 +50,5 @@ class RealDataGenerator(tf.keras.utils.Sequence):
         training_labels = np.array(gen_labels)
         ragged = tf.ragged.constant(training_labels).to_tensor()
         return training_set,ragged
+
+    

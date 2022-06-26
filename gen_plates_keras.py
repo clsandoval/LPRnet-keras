@@ -18,13 +18,14 @@ class RealImageGenerator:
     
     def generate_images(self, number, training = True):
         images,labels = [],[]
-        random.shuffle(self.images)
+        randindices = np.random.randint(0,len(self.images)-1,number)
         i=0
-        for fl in self.images:
+        imgs = [self.images[i] for i in randindices]
+        for fl in imgs:
             label = fl.split('\\')[-1].split('_')[0].split('-')[0]
             img = cv2.imread(fl)
             Plate = img.astype(np.float32)
-            Plate = data_augmentation(Plate)
+            #Plate = data_augmentation(Plate)
             if training == False:
                 images.append(Plate)
             else:

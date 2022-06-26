@@ -9,6 +9,7 @@ import argparse
 from generator import DataGenerator, RealDataGenerator
 from LPRnet.LPRnet_separable import LPRnet,CTCLoss,global_context
 from LPRnet.LPRnet_edgeTPU import LPRnet as LPRnet_edgeTPU
+from LPRnet.LPRnet import LPRnet as LPRnet_reduced
 
 import wandb
 from wandb.keras import WandbCallback
@@ -24,7 +25,6 @@ MODEL_PATH = 'trained_models'
 TFLITE_PATH = 'tflite_models'
 
 real_images_val = glob.glob('C:\\Users\\carlos\\Desktop\\cs\\ml-sandbox\\ANPR\\LPRnet-keras\\valid\\*\\*.png')
-real_images = glob.glob('C:\\Users\\carlos\\Desktop\\cs\\ml-sandbox\\ANPR\\LPRnet-keras\\test\\marty\\*\\*.png')
 
 def main(args):
     MODEL_NAME = args['name']
@@ -42,8 +42,12 @@ def main(args):
         )
     else:
         print("Building model from scratch")
-        if args['arch'] != "edgetpu":
+        if args['arch'] == "separable":
             model = LPRnet()
+            model.compile(optimizer=keras.optimizers.Adam(learning_rate=1e-3),loss =CTCLoss)
+            model.build((1,24,94,3))
+        elif args['arch'] == "reduced":
+            model = LPRnet_reduced()
             model.compile(optimizer=keras.optimizers.Adam(learning_rate=1e-3),loss =CTCLoss)
             model.build((1,24,94,3))
         else:
