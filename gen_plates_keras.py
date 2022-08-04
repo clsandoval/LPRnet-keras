@@ -25,7 +25,7 @@ class RealImageGenerator:
             label = fl.split('\\')[-1].split('_')[0].split('-')[0]
             img = cv2.imread(fl)
             Plate = img.astype(np.float32)
-            #Plate = data_augmentation(Plate)
+            Plate = data_augmentation(Plate)
             if training == False:
                 images.append(Plate)
             else:
