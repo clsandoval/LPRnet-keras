@@ -32,6 +32,11 @@ def main(args):
         project="LPRnet-keras",
         entity="clsandoval",
         name=MODEL_NAME,
+        config = {
+            "epochs":args['epochs'],
+            "batch_size":64,
+            "lr":.001
+        },
     )
 
     if os.path.exists(os.path.join(MODEL_PATH,MODEL_NAME)):
