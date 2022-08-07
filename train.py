@@ -24,7 +24,6 @@ PROJECT_NAME = "LPRnet_keras"
 MODEL_PATH = 'trained_models'
 TFLITE_PATH = 'tflite_models'
 
-real_images_val = glob.glob('C:\\Users\\carlos\\Desktop\\cs\\ml-sandbox\\ANPR\\LPRnet-keras\\valid\\*\\*.png')
 
 def main(args):
     MODEL_NAME = args['name']
@@ -56,7 +55,7 @@ def main(args):
 
     data = []
     labels = []
-
+    real_images_val = glob.glob(args['valid_path']+"*.png")
     for file in real_images_val:
         label = file.split('\\')[-1].split('_')[0].split('-')[0]
         label = label.replace("O","0")
@@ -73,7 +72,7 @@ def main(args):
     generate = DataGenerator()
     if args['gen'] == "real":
         print("Real images for training")
-        generate = RealDataGenerator()
+        generate = RealDataGenerator(args['train_path'])
     check = tf.keras.callbacks.ModelCheckpoint(
         os.path.join(MODEL_PATH,MODEL_NAME),
         monitor="val_loss",
@@ -97,6 +96,8 @@ if __name__ == "__main__":
     parser.add_argument('-e','--epochs', help='Number of epochs', required=True)
     parser.add_argument('-a','--arch', help='Architecture to use', required=True)
     parser.add_argument('-n','--name', help='Model name', required=True)
-    parser.add_argument('-g', '--gen', help='Dataset geeneration type', required=True)
+    parser.add_argument('-g', '--gen', help='Dataset generation type', required=True)
+    parser.add_argument('-tp', '--train_path', help='Training data directory', required=True)
+    parser.add_argument('-vp', '--valid_path', help='Validation data directory', required=True)
     args = vars(parser.parse_args())
     main(args)

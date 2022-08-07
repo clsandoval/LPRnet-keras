@@ -3,8 +3,7 @@ from gen_plates_keras import *
 import tensorflow as tf  
 
 gen = ImageGenerator()
-realgen = RealImageGenerator()
-ccpd_realgen = RealImageGenerator(image_path = "C://Users//carlos//Desktop//cs//datasets//CCPD-PLATES//*.png")
+#ccpd_realgen = RealImageGenerator(image_path = "C://Users//carlos//Desktop//cs//datasets//CCPD-PLATES//*.png")
 
 IMAGE_SHAPE = [94,24]
 CHARS = "ABCDEFGHIJKLMNPQRSTUVWXYZ0123456789" # exclude I, O
@@ -32,14 +31,16 @@ class DataGenerator(tf.keras.utils.Sequence):
         return training_set,ragged
 
 class RealDataGenerator(tf.keras.utils.Sequence):
-    def __init__(self):
+    def __init__(self, data_dir):
+        self.path = data_dir
+        self.gen = RealImageGenerator(image_path=data_dir)
         pass
 
     def __len__(self):
         return 50
 
     def __getitem__(self,index):
-        data, labels = realgen.generate_images(64)
+        data, labels = self.gen.generate_images(64)
         gen_labels = []
         for label in labels:
             label =label.replace('O','0')
