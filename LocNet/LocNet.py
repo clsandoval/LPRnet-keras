@@ -28,9 +28,10 @@ def build_regressor_layers(input_layer):
     return x1
 
 input_layer = layers.Input(shape=(24,94,3))
-regressor = build_regressor_layers(input_layer)
-model = keras.Model(inputs=input_layer, outputs=regressor)
-
-# %%
-
-# %%
+localization = build_localization_layers(input_layer)
+reshape_layer = layers.Reshape((-1,6*24*10))(localization)
+regressor = build_regressor_layers(reshape_layer)
+theta = layers.Reshape((-1,2,3))(regressor)
+model = keras.Model(inputs=input_layer, outputs=theta)
+model.summary()
+#%%
