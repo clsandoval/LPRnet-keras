@@ -57,6 +57,7 @@ def main(args):
         else:
             model = LPRnet_edgeTPU()
             model.compile(optimizer=keras.optimizers.Adam(learning_rate=1e-3),loss =CTCLoss)
+            model.build((1,24,94,3))
 
     data = []
     labels = []
@@ -72,6 +73,7 @@ def main(args):
     training_set = np.array(data,dtype=np.float32)
     training_labels = np.array(labels)
     ragged = tf.ragged.constant(training_labels).to_tensor()
+    #ragged = tf.ragged.constant(training_labels)
     val_dataset = tf.data.Dataset.from_tensor_slices((training_set,ragged)).batch(64).repeat()
 
     generate = DataGenerator()
@@ -83,13 +85,13 @@ def main(args):
         monitor="val_loss",
         verbose=0,
         save_best_only=False,
-        save_weights_only=False,
+        save_weights_only=True,
         mode="auto",
         save_freq=500,
         options=None,
     )
     print("training model for {} epochs".format(epochs))
-    model.fit_generator(generator=generate,validation_data=val_dataset,validation_steps=50,epochs=int(epochs),steps_per_epoch=50,callbacks=[WandbCallback(),check])
+    model.fit(generate,validation_data=val_dataset,validation_steps=50,epochs=int(epochs),steps_per_epoch=50,callbacks=[WandbCallback(),check])
     converter = tf.lite.TFLiteConverter.from_keras_model(model)
     tflite_model = converter.convert()
 

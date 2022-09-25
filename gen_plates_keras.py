@@ -33,7 +33,7 @@ class RealImageGenerator:
             if training == False:
                 images.append(Plate)
             else:
-                images.append(cv2.resize(Plate,(94,24))/256.)
+                images.append(cv2.resize(Plate,(94,24))/256)
             labels.append(label)
             if i == number-1:
                 break

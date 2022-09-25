@@ -33,6 +33,7 @@ class DataGenerator(tf.keras.utils.Sequence):
 class RealDataGenerator(tf.keras.utils.Sequence):
     def __init__(self, data_dir):
         self.path = data_dir
+   
         self.gen = RealImageGenerator(image_path=data_dir)
         pass
 

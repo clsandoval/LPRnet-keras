@@ -1,9 +1,9 @@
-#%%
 import numpy as np
 import tensorflow as tf
 import tensorflow.keras as keras
 import keras.layers as layers
 import keras.backend as K
+from LocNet.LocNet import stn
 #from generator import DataGenerator
 
 IMAGE_SHAPE = [94,24]
@@ -48,10 +48,11 @@ def smallblock(out_channels,inputs):
     return x
 
 
-def LPRnet():
+def LPRnet(use_stn=True):
     #main network layers
     input_layer = tf.keras.Input(shape=(24, 94, 3))
-    x_1 = keras.layers.Conv2D(64,kernel_size = (3,3),strides=1,padding='same',name='main_conv1')(input_layer)
+    stn_out = stn(input_layer)
+    x_1 = keras.layers.Conv2D(64,kernel_size = (3,3),strides=1,padding='same',name='main_conv1')(stn_out)
     x = keras.layers.BatchNormalization(name='BN1')(x_1)
     x = keras.layers.ReLU(name='RELU1')(x)
     x = keras.layers.MaxPool2D(pool_size=(3,3),strides=(1,1),name='maxpool2d_1',padding='same')(x)
@@ -98,6 +99,7 @@ def LPRnet():
 
     gc_concat = keras.layers.Conv2D(NUM_CLASS,kernel_size=(1,1),strides=(1,1),padding='same',name='conv_out') (gc_concat)
     logits = keras.layers.Lambda(lambda x: tf.math.reduce_mean(x[0],axis=1))([gc_concat])
+    
     output = keras.layers.Softmax()(logits)
 
     model = keras.Model(inputs =input_layer, outputs = output )
