@@ -13,7 +13,7 @@ import glob
 
 
 class RealImageGenerator:
-    def __init__(self,image_path = "data//*//*//", augmentation = False):
+    def __init__(self,image_path = "data//*//*//", augmentation = True):
         self.augmentation=augmentation
         
         self.images =  glob.glob(image_path+"*.png")
