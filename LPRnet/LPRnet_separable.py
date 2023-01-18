@@ -1,8 +1,8 @@
+#%%
 import numpy as np
 import tensorflow as tf
 import keras
 import keras.backend as K
-from generator import DataGenerator
 
 IMAGE_SHAPE = [94, 24]
 CHARS = "ABCDEFGHIJKLMNPQRSTUVWXYZ0123456789"  # exclude I, O
@@ -191,3 +191,10 @@ class LPRnet(keras.Model):
         )
         logits = keras.layers.Softmax()(logits)
         return logits
+
+
+model = LPRnet()
+model.compile(optimizer=keras.optimizers.Adam(learning_rate=1e-3), loss=CTCLoss)
+model.build((1, 24, 94, 3))
+model.summary()
+# %%
